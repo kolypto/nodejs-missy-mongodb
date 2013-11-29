@@ -9,7 +9,10 @@ require('../');
 /** Set up the Schema
  */
 exports.setUp = function(callback){
-    this.schema = new missy.Schema(
+    if (!process.env['MISSY_MONGODB'])
+        throw new Error('Environment variable is not set: MISSY_MONGODB');
+
+    this.schema = new missy.Schema([
         process.env['MISSY_MONGODB'],
         { connect: {
             db: {
@@ -23,7 +26,8 @@ exports.setUp = function(callback){
             },
             replSet: null,
             mongos: null
-        } });
+        } }
+    ]);
 
     this.schema.connect()
         .nodeify(callback);
@@ -49,12 +53,16 @@ exports.tearDown = function(callback){
     Q()
         // Load existing collection names
         .then(function(){
-            return Q.nmcall(db, 'collectionNames');
+            return Q.nmcall(db, 'collectionNames')
+                .then(function(collections){
+                    return _.pluck(collections, 'name');
+                });
         })
         // Remove collections
         .then(function(existingCollections){
             console.log('Existing collections: ', existingCollections);
             console.log('Drop: ', collections);
+
             return _.map(
                     _.intersection(collections, existingCollections),
                     function(collection){
