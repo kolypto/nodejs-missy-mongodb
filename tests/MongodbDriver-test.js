@@ -184,7 +184,7 @@ exports.testMongodbDriver = function(test){
         function(){
             return User.findOne({ login: '!!!' })
                 .then(function(entity){
-                    test.equal(entity, null);
+                    test.strictEqual(entity, null);
                 });
         },
         // find(): projection, sort
@@ -227,11 +227,77 @@ exports.testMongodbDriver = function(test){
                     test.deepEqual(entity, { _id: 3, login: 'd', roles: ['guest'], extra: 111 });
                 });
         },
-        // updateQuery(), upsert=false
-        // updateQuery(), upsert=true
-        // updateQuery(), upsert=false, multi=true
-        // removeQuery()
+        // updateQuery(), upsert=false, multi=true, existing
+        function(){
+            return User.updateQuery({ _id: { $gte: 0 } }, { $inc: { age: 10 } }, { /* upsert: false */ multi: true })
+                .then(function(entities){
+                    test.ok(_.isArray(entities));
+                    test.equal(entities.length, 2);
+                    test.deepEqual(entities[0], { _id: 1, login: 'a', roles: ['admin', 'user'], age: 10 });
+                    test.deepEqual(entities[1], { _id: 2, login: 'b', roles: ['user'], age: 10 });
+                });
+        },
+        // updateQuery(), upsert=false, multi=false, existing
+        function(){
+            return User.updateQuery({ _id: { $gte: 0 } }, { $inc: { age: 1 } }, { /* upsert: false */ /* multi: false */ })
+                .then(function(entity){
+                    test.ok(!_.isArray(entity));
+                    test.deepEqual(entity, { _id: 1, login: 'a', roles: ['admin', 'user'], age: 11 });
+                });
+        },
+        // updateQuery(), upsert=false, multi=false, missing
+        function(){
+            return User.updateQuery({ _id: '!!!' }, { $inc: { age: 1 } }, { /* upsert: false */ /* multi: false */ })
+                .then(function(entity){
+                    test.ok(!_.isArray(entity));
+                    test.strictEqual(entity, null);
+                });
+        },
+        // updateQuery(), upsert=true, existing
+        function(){
+            return User.updateQuery({ _id: 2 }, { $inc: { age: 2 } }, { upsert: true /* multi: false */ })
+                .then(function(entity){
+                    test.deepEqual(entity, { _id: 2, login: 'b', roles: ['user'], age: 12 });
+                });
+        },
+        // updateQuery(), upsert=true, missing
+        function(){
+            return User.updateQuery({ _id: 3 }, { login: 'c', $inc: { age: 2 } }, { upsert: true /* multi: false */ })
+                .then(function(entity){
+                    test.deepEqual(entity, { _id: 3, login: 'c', age: 2 });
+                });
+        },
+        // removeQuery(), multi=false, existing
+        function(){
+            return User.removeQuery({ login: 'c' }, { multi: false })
+                .then(function(entity){
+                    test.deepEqual(entity, { _id: 3, login: 'c', age: 2 });
+                });
+        },
+        // removeQuery(), multi=false, missing
+        function(){
+            return User.removeQuery({ login: 'c' }, { multi: false })
+                .then(function(entity){
+                    test.strictEqual(entity, null);
+                });
+        },
         // removeQuery(), multi=true
+        function(){
+            return User.removeQuery({ login: { $in: ['a', 'b'] } }, { /* multi: true */ })
+                .then(function(entities){
+                    test.ok(_.isArray(entities));
+                    test.equal(entities.length, 2);
+                    test.deepEqual(entities[0], { _id: 1, login: 'a', roles: ['admin', 'user'], age: 11 });
+                    test.deepEqual(entities[1], { _id: 2, login: 'b', roles: ['user'], age: 12 });
+                });
+        },
+        // Final consistency test
+        function(){
+            return User.count()
+                .then(function(n){
+                    test.equal(n, 0);
+                });
+        }
     ].reduce(Q.when, Q(1))
         .catch(function(e){
             test.ok(false, e.stack);
