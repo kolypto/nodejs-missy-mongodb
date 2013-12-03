@@ -173,11 +173,60 @@ exports.testMongodbDriver = function(test){
                     test.ok(e instanceof missy.errors.EntityNotFound)
                 });
         },
-        // findOne()
+        // findOne(), existing
+        function(){
+            return User.findOne({ login: 'd' }, { roles: 0 })
+                .then(function(entity){
+                    test.deepEqual(entity, { _id:3, login: 'd', extra: 111 });
+                });
+        },
+        // findOne(), missing
+        function(){
+            return User.findOne({ login: '!!!' })
+                .then(function(entity){
+                    test.equal(entity, null);
+                });
+        },
         // find(): projection, sort
+        function(){
+            return User.find({ _id: { $gte: 2 } }, { roles: 0 }, { _id: -1 })
+                .then(function(entities){
+                    test.equal(entities.length, 2);
+                    test.deepEqual(entities[0], { _id: 3, login: 'd', extra: 111 });
+                    test.deepEqual(entities[1], { _id: 2, login: 'b' });
+                });
+        },
         // find(): skip, limit
+        function(){
+            return User.skip(1).limit(2).find({}, { roles: 0 }, { _id: 1 })
+                .then(function(entities){
+                    test.equal(entities.length, 2);
+                    test.deepEqual(entities[0], { _id: 2, login: 'b' });
+                    test.deepEqual(entities[1], { _id: 3, login: 'd', extra: 111 });
+                });
+        },
         // count()
-        // remove()
+        function(){
+            return User.count({ _id: { $gte: 2 } })
+                .then(function(n){
+                    test.equal(n, 2);
+                })
+        },
+        // remove(): missing
+        function(){
+            return User.remove({ _id: '!!!' })
+                .then(function(entity){ test.ok(false); })
+                .catch(function(e){
+                    test.ok(e instanceof missy.errors.EntityNotFound);
+                });
+        },
+        // remove(): existing
+        function(){
+            return User.remove({ _id: '3' })
+                .then(function(entity){
+                    test.deepEqual(entity, { _id: 3, login: 'd', roles: ['guest'], extra: 111 });
+                });
+        },
         // updateQuery(), upsert=false
         // updateQuery(), upsert=true
         // updateQuery(), upsert=false, multi=true
