@@ -3,6 +3,11 @@ Missy MongoDB driver
 
 MongoDB database driver for [Missy](https://github.com/kolypto/nodejs-missy).
 
+
+
+
+
+
 Usage
 =====
 
@@ -48,8 +53,12 @@ var driver = new MongodbDriver(function(){ // Custom connecter function
 
 // Schema
 var schema = new missy.Schema(driver);
-var schema = new missy.Schema('mongodb://localhost/test'); // short form
 ```
+
+
+
+
+
 
 Type Handlers
 -------------

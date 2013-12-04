@@ -34,11 +34,13 @@ exports.setUp = function(callback){
         .nodeify(callback);
 };
 
-
-exports.testObjectId = function(test){
+/** Test driver: specific cases
+ * @param {test|assert} test
+ */
+exports.testMongodbDriver = function(test){
     var schema = this.schema;
 
-    var Post = schema.define('Log', {
+    var Post = schema.define('Post', {
         _id: 'ObjectID',
         title: String,
         length: Number,
@@ -104,16 +106,16 @@ exports.testObjectId = function(test){
                 });
         }
     ].reduce(Q.when, Q(1))
-        .catch(function(e){
-            test.ok(false, e.stack);
-        })
-        .finally(function(){
-            test.done();
-        }).done();
+        .catch(function(e){ test.ok(false, e.stack); })
+        .finally(test.done)
+        .done();
 };
 
 
 
+/** Test driver: common behaviors
+ * @param {test|assert} test
+ */
 exports.testCommonDriverTest = function(test){
     var schema = this.schema;
 
@@ -121,16 +123,15 @@ exports.testCommonDriverTest = function(test){
 
     _.values(defaultDriverTest.tests)
     .reduce(Q.when, Q(1))
-        .catch(function(e){
-            test.ok(false, e.stack);
-        })
-        .finally(function(){
-            test.done();
-        }).done();
+        .catch(function(e){ test.ok(false, e.stack); })
+        .finally(test.done)
+        .done();
 };
 
 
 
+/** Tear down the schema
+ */
 exports.tearDown = function(callback){
     if (!this.schema)
         return callback();
@@ -172,6 +173,7 @@ exports.tearDown = function(callback){
                     }
             ).reduce(Q.when, Q(1));
         })
+        // Disconnect
         .then(function(){
             return schema.disconnect();
         })
