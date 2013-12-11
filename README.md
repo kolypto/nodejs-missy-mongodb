@@ -38,7 +38,8 @@ var schema = new missy.Schema('mongodb://localhost/test', {
 Full form with manual driver initialization:
 
 ```js
-var missy = require('missy').loadDriver('mongodb'),
+var missy = require('missy'),
+    MongodbDriver = require('missy-mongodb').MongodbDriver,
     mongodb = require('mongodb')
     ;
 
