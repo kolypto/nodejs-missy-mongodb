@@ -1,3 +1,6 @@
+[![Version](https://badge.fury.io/js/missy-mongodb.png)](https://npmjs.org/package/missy-mongodb)
+[![Dependency Status](https://gemnasium.com/kolypto/nodejs-missy-mongodb.png)](https://gemnasium.com/kolypto/nodejs-missy-mongodb)
+
 Missy MongoDB driver
 ====================
 
